@@ -62,7 +62,7 @@ const on=n=>ACT[night-1].includes(n);
 try{const u=parseInt(localStorage.getItem('fnasd2_unlocked'));if(u>=1&&u<=5)unlocked=u}catch(x){}
 const anyMove=()=>Math.abs(gate-gateTo)>1e-6||Math.abs(doors[0]-doorTo[0])>1e-6||Math.abs(doors[1]-doorTo[1])>1e-6;
 const moving=()=>plock;
-let tasks=[],miss=0,callSt=0,callT=0,callCool=30,mg=null,slept=0,ans=0,night=1,pcOpen=false,note='',noteT=0,endMode='next',plock=false,busy=-1,emps=[],slot=null,eth=null,jon=null,han=null,cust=null,fdoor=0,rep=0,callRage=false,callMax=5,ringT=0,jor=null,bri=null,dingT=0,dingN=0;
+let tasks=[],miss=0,callSt=0,callT=0,callCool=30,mg=null,slept=0,ans=0,night=1,pcOpen=false,note='',noteT=0,endMode='next',plock=false,busy=-1,emps=[],slot=null,eth=null,jon=null,han=null,cust=null,fdoor=0,rep=0,hb=false,hbP=0,js=null,callRage=false,callMax=5,ringT=0,jor=null,bri=null,dingT=0,dingN=0;
 const DEF={upload:['Ticket Upload'],sorter:['Ticket Sorter'],del:['Ticket Auto Delete']};
 const EVENTS=[['Error','Something went wrong. Click Continue to retry.'],['Click to continue','The task is waiting for you.'],['Are you still there?','Confirm you are still at your desk.'],['Idle Check','Idle check: confirm to keep going.']];
 const PLAN=[['upload'],['upload'],['upload','sorter'],['upload','sorter'],['upload','sorter','del']];
@@ -164,6 +164,9 @@ function front(){
   for(let r=0;r<3;r++)for(let k=0;k<14;k++)R(650+k*14.6-r*3,442+r*11,10,7,'#4b5058');
   g.save();g.translate(664,392);g.rotate(-.07);R(-29,-21,60,44,'#00000022');R(-30,-22,60,44,'#ffe66d');R(-30,-22,60,7,'#f2cf45');
   g.font='bold 9px "Comic Sans MS","Segoe Script",cursive';g.textAlign='center';g.fillStyle='#3a3320';g.fillText('Phones',0,-3);g.fillText('over in',0,8);g.fillText('person',0,19);g.restore();
+  g.save();g.translate(53,186);g.rotate(-.04);R(-35,-52,74,104,'#00000026');R(-37,-54,74,104,'#f7f3e6');R(-37,-54,74,16,'#8c1c1c');
+  g.font='bold 8px system-ui,sans-serif';g.textAlign='center';g.fillStyle='#fff';g.fillText('EMPLOYEE',0,-47);g.fillStyle='#8c1c1c';g.font='bold 10px system-ui,sans-serif';g.fillText('Employees',0,-26);g.fillText('Handbook',0,-14);
+  for(let i=0;i<7;i++)R(-28,-2+i*7,i%3==2?36:56,2,'#b9b2a0');O(0,-54,4,4,'#d9534f');g.restore();
   O(872,448,12,17,'#d8dce2');O(920,402,13,10,'#00000022');R(906,388,28,26,'#f1ede4');R(932,394,8,14,'#f1ede4');
 }
 
@@ -437,6 +440,7 @@ const views=[front,()=>side(false),back,()=>side(true)];
 function frame(now){
   if(!last)last=now;const dt=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
   if(menu){t+=dt;drawMenu();requestAnimationFrame(frame);return}
+  if(js){t+=dt;jsFrame(dt);requestAnimationFrame(frame);return}
   t+=dt;const st=dt/2;
   gate+=Math.max(-st,Math.min(st,gateTo-gate));
   for(let i=0;i<2;i++)doors[i]+=Math.max(-st,Math.min(st,doorTo[i]-doors[i]));
@@ -447,7 +451,8 @@ function frame(now){
   noteT-=dt;const m=callSt==1?(callRage?'Jonathan: Here\'s a phone call for training. Answer now (':'Phone ringing! Check the computer (')+Math.ceil(callT)+'s)':noteT>0?note:'';
   if(toastEl.textContent!=m){toastEl.textContent=m;toastEl.classList.toggle('on',!!m)}
   const lbl=['Sleep','Cancel','Wake up','Sleep'][sleepSt];if(Z.textContent!=lbl)Z.textContent=lbl;
-  views[dir]();
+  if(hb&&(over||sleepSt!=0||eth.st!='idle'||jon.st!='idle'||bbusy()||jbusy()||callSt!=0||emps.some(e=>e.st!='idle'))){hb=false;if(!over)say('You put the handbook down.')}
+  views[dir]();if(hb)drawHB();
   if(fade>0){R(0,0,W,H,'rgba(20,18,15,'+fade+')');fade=Math.max(0,fade-.07)}
   if(dark>0)R(0,0,W,H,'rgba(4,5,10,'+(ease(dark)*.93)+')');
   if(dark>0&&dir==0)ipad();
@@ -456,13 +461,63 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 const lab=document.getElementById('lab'),mistEl=document.getElementById('mist');
+const HBX=140,HBY=14,HBW=680,HBH=512,PRV=[HBX+30,HBY+HBH-58,100,30],NXT=[HBX+HBW-130,HBY+HBH-58,100,30],HBR=[10,132,86,114];
+const HB=[
+{t:'Section 1: Your Role',s:[
+['1.1 Welcome','Welcome to the Front Desk! You were selected for this position because you were physically present. Your shift runs 12:00 PM to 6:00 PM. One real second equals one in-game minute. Please do not ask why.'],
+['1.2 Primary Duty: Tickets','Finish every ticket task assigned for the night: Ticket Upload (all nights), Ticket Sorter (from Night 3) and Ticket Auto Delete (Night 5). Press Start on the monitor. One task runs at a time, filling 1% per second. You may switch freely; progress is saved.'],
+['1.3 Stalled Tickets','Tasks stall at random. A high-pitched ding means the monitor needs you. Click Continue on the stalled task. The ding lasts 5 seconds. Your guilt lasts longer.'],
+['1.4 Equipment','A / D or the arrow buttons turn you 90 degrees. Space or the on-screen buttons work the front gate and the side doors. They take 2 seconds, and you cannot turn while they move. The monitor, iPad and sticky note are company property. The sticky note is also a threat.']]},
+{t:'Section 2: Rest, Reviews and Phones',s:[
+['2.1 Company-Approved Rest','To pass your shift you must rest for 2 hours in total. Press Sleep: 3 seconds to doze off, 2 seconds to wake. Cancelling before you are fully asleep is instant. Time runs at 2x while resting, and the iPad on your desk tracks your total.'],
+['2.2 Passing the Shift','Complete every ticket AND log 2 hours of rest. The shift passes automatically the moment both are done. Anything less and you are sent home at 6:00 PM.'],
+['2.3 Performance Reviews','5 Mistakes and you are terminated. 3 Customer Reports and you are also terminated. Napping in the wrong place is a faster form of termination (see Sections 4 and 5).'],
+['2.4 Phones','A ringing phone has 5 seconds to be answered on the monitor. Then click every dot before time runs out. Missed, failed or ignored calls count as Mistakes. Phones are for staff only; customers are handled in person.']]},
+{t:'Section 3: Customers',s:[
+['3.1 Greeting Procedure','Customers enter through the automatic door (listen for the ping) and walk to your desk. Answer their question by clicking a button. A wrong answer is a Mistake. Customers will wait forever. They have nowhere else to be.'],
+['3.2 The Gate','Closing the gate on a waiting customer is a Mistake, with a few exceptions listed in Section 6. The gate is for enemies, not for customers who just want to know how to turn on a computer.'],
+['3.3 Napping on Duty','If you are asleep in front of a waiting customer for 5 seconds, they file a Report. Three Reports end your career. Please nap responsibly, and in the correct order of events.'],
+['3.4 Visibility','While you are resting you cannot see the front door open, though you may faintly notice shapes approaching. This is considered a feature.']]},
+{t:'Section 4: Staff Movements',s:[
+['4.1 Sally (Left Entrance) and 4.2 Richard (Right Door)','They walk to their door. You hear footsteps for 4 seconds, then the door opens. If you are asleep or still waking up when it opens, they find you and you are terminated. Wake up early. Walk your own steps.'],
+['4.3 Phil (Either Door)','Phil goes out for lunch, then returns knocking for 5 seconds with food. Open his door in time or he is left outside and you are terminated. Napping staff cannot open doors. This rule is not Phil\'s fault.'],
+['4.4 Cubicle Signs','In the back office, a small hanging sign above each cubicle shows a light for Sally, Richard and Phil. Light on: they are at their cubicle. Light off: they are out and about, and you should be awake.'],
+['4.5 Staff Safety Tip','Closing a side door does not stop an employee. They are staff. They have keys. Just be awake.']]},
+{t:'Section 5: Special Personnel, Part 1',s:[
+['5.1 Ethan, Hardware Specialist','Announces himself with 4 seconds of kangaroo-style boinging, then waits at your desk for 15 seconds asking introductory hardware questions. You cannot turn or use the monitor while he is there. Close the gate for 5 seconds and he gives up. If you are asleep and the gate is not fully closed, he finds you.'],
+['5.2 Jonathan, Cubicle Caller','Not a physical person. A clank, then a furious phone call: "Here\'s a phone call for training." It rings for only 3 seconds, so answer immediately. No other calls happen while he is on the line.'],
+['5.3 Brian, Manager','If every ticket sits idle for 15+ seconds, Brian appears at the front desk for a 20 second "talk". You cannot turn or nap, and the gate cannot be closed on him. If he arrives while you are napping, you are terminated. He opens a closed gate. He never visits once all tickets are done.']]},
+{t:'Section 6: Special Personnel, Part 2',s:[
+['6.1 Hannah, Sound Effects','Not a physical person. Hannah only appears as audio, imitating footsteps, boings, knocks and clanks from elsewhere in the building. If there is no one there, it was probably Hannah. Trust, but verify.'],
+['6.2 Jordan (Unconfirmed)','Reported to appear roughly once in a billion seconds. Sightings describe long hair, a bushy beard and dead black eyes. He asks if you want to see his secret fishing spot. If you see him: go to sleep immediately. Do not accept the invitation. HR cannot help you.'],
+['6.3 Special Customers','The next two pages cover customers who are not standard. They do not follow the normal rules of the gate. Please read carefully. Please.']]},
+{t:'Section 7: Special Customers, Part 1',s:[
+['7.1 Elyse','Delivers DoorDash. Her only available answer is "Thank you!" and it is correct. Closing the gate on her is the only way to make a Mistake. Do not refuse lunch.'],
+['7.2 Michael (No. 13)','Walks up, says "Ha heres a phone call", hands you a regular phone call (normal rules apply) and leaves immediately. He is gone before you can respond. This is how he likes it.'],
+['7.3 Charles Yeago','Asks when Elyse works. The only answer offered is "She works tomorrow", which is incorrect and counts as a Mistake. He thanks you and leaves. Closing the gate on him is not a Mistake; he just leaves mad.'],
+['7.4 The Traveling Bookman','Carries a box of books and asks where Hannah is. The only answer is "She\'s at the restroom", which is a Mistake. Closing the gate is not a Mistake. He leaves mad. He will remember this.']]},
+{t:'Section 8: Special Customers, Part 2',s:[
+['8.1 Patrika','Will try to convert you for 20 seconds, and you cannot turn away while she speaks. Close the gate and she leaves with no Mistake. Her ministry is not covered by your health plan.'],
+['8.2 Tyler','Says "workin hard or hardly workin" and offers two random answers. Any answer is a Mistake, and so is closing the gate. Do nothing for 10 seconds and he leaves, satisfied. Yes, really.'],
+['8.3 Surrender James','A very serious businessman who asks very hard questions where both answers are wrong. Answering is a Mistake and earns an insult. Ignore him for 15 seconds and he leaves. Closing the gate is a Mistake.'],
+['Closing Remarks','Thank you for reading. Please sign below. (You cannot, it is a wall.) Good luck out there. You were hired because you were present.']]}];
+function wrapT(s,mw){g.font='14px system-ui,sans-serif';const ws=s.split(' '),o=[];let cur='';for(const w of ws){const t=cur?cur+' '+w:w;if(g.measureText(t).width>mw&&cur){o.push(cur);cur=w}else cur=t}if(cur)o.push(cur);return o}
+let hbMax=0;
+function drawHB(){R(0,0,W,H,'rgba(8,8,10,.64)');R(HBX+7,HBY+9,HBW,HBH,'rgba(0,0,0,.4)');R(HBX,HBY,HBW,HBH,'#f8f4e6');
+  g.strokeStyle='#cfc6ab';g.lineWidth=2;g.strokeRect(HBX+8,HBY+8,HBW-16,HBH-16);
+  T('HELPFUL CORP.  |  DEPARTMENT OF FRONT DESK OPERATIONS',HBX+HBW/2,HBY+32,10,'#8c1c1c');T('EMPLOYEE HANDBOOK',HBX+HBW/2,HBY+60,24,'#222');R(HBX+30,HBY+70,HBW-60,2,'#8c1c1c');
+  const p=HB[hbP];T(p.t,HBX+34,HBY+96,15,'#8c1c1c','left');let y=HBY+120;
+  p.s.forEach(([h,b])=>{T(h,HBX+34,y,14,'#222','left');y+=19;const ls=wrapT(b,HBW-68);g.font='14px system-ui,sans-serif';g.fillStyle='#3a3a3a';g.textAlign='left';ls.forEach(l=>{g.fillText(l,HBX+34,y);y+=18});y+=11});hbMax=y;
+  [[PRV,'< Prev',hbP>0],[NXT,'Next >',hbP<HB.length-1]].forEach(([r,l,on])=>{R(r[0],r[1],r[2],r[3],on?'#8c1c1c':'#d8d2bd');T(l,r[0]+r[2]/2,r[1]+20,13,on?'#fff':'#9a937e')});
+  T('Form FD-2  |  Page '+(hbP+1)+' of '+HB.length+'  |  Click outside the handbook to close it',HBX+HBW/2,HBY+HBH-18,10,'#7a7466')}
+function openHB(){if(over||menu||sleepSt!=0||dir!=0)return;if(eth.st!='idle'||jon.st!='idle'||bbusy()||jbusy()||callSt!=0||emps.some(e=>e.st!='idle')){say('Not now. Something needs your attention.');return}hb=true;hbP=0;closePC()}
 function ui(){lab.textContent='Night '+night+': '+names[dir]}
-function turn(n){if(over||menu)return;if(sleepSt==1){say('You are falling asleep.');return}if((eth&&eth.st=='here')||jbusy()||bbusy()||pbusy()){say(jbusy()?'You cannot look away.':bbusy()?'Brian is talking to you.':pbusy()?'Patrika is talking to you.':'Ethan is at the desk');return}if(moving()){say('Wait until it finishes moving');return}closePC();dir=(dir+n+4)%4;fade=.9;ui()}
+function turn(n){if(over||menu||hb)return;if(sleepSt==1){say('You are falling asleep.');return}if((eth&&eth.st=='here')||jbusy()||bbusy()||pbusy()){say(jbusy()?'You cannot look away.':bbusy()?'Brian is talking to you.':pbusy()?'Patrika is talking to you.':'Ethan is at the desk');return}if(moving()){say('Wait until it finishes moving');return}closePC();dir=(dir+n+4)%4;fade=.9;ui()}
 document.getElementById('L').onclick=()=>turn(-1);
 document.getElementById('Rb').onclick=()=>turn(1);
-addEventListener('keydown',e=>{if(e.code=='Space'){e.preventDefault();if(!e.repeat&&!over&&!menu&&sleepSt!=1&&!moving()){if(dir==1||dir==3)toggleDoor(dir==3?1:0);else if(dir==0)toggleGate()}return}if(e.key=='ArrowLeft'||e.key=='a'||e.key=='A')turn(-1);if(e.key=='ArrowRight'||e.key=='d'||e.key=='D')turn(1)});
+addEventListener('keydown',e=>{if(e.key=='Escape')hb=false;if(e.code=='Space'){e.preventDefault();if(!e.repeat&&!over&&!menu&&!hb&&sleepSt!=1&&!moving()){if(dir==1||dir==3)toggleDoor(dir==3?1:0);else if(dir==0)toggleGate()}return}if(e.key=='ArrowLeft'||e.key=='a'||e.key=='A')turn(-1);if(e.key=='ArrowRight'||e.key=='d'||e.key=='D')turn(1)});
 const Z=document.getElementById('Z');
-Z.onclick=()=>{if(over||menu)return;if(bbusy()&&(sleepSt==0||sleepSt==3)){say('Brian is talking to you.');return}
+Z.onclick=()=>{if(over||menu||hb)return;if(bbusy()&&(sleepSt==0||sleepSt==3)){say('Brian is talking to you.');return}
   if(sleepSt==0||sleepSt==3){sleepSt=1;closePC()}
   else if(sleepSt==1){sleepSt=0;dark=0}
   else sleepSt=3};
@@ -495,14 +550,14 @@ function sim(gm,dt){
   else if(mg){mg.t-=dt;if(mg.t<=0)endCall(false)}
   simEmp(gm,dt);simNpc(gm,dt);simJordan(dt);simBrian(gm);simCust(gm,dt)}
 function showEnd(a,b,c,m){endT.textContent=a;endP.innerHTML=b;againB.textContent=c;endMode=m;endEl.classList.add('on')}
-function halt(){over=true;if(sleepSt==1||sleepSt==2)sleepSt=3;closePC()}
+function halt(){over=true;hb=false;if(sleepSt==1||sleepSt==2)sleepSt=3;closePC()}
 function lose(){halt();showEnd('You lost','Five mistakes. The calls and errors piled up.','Retry night '+night,'retry')}
 function endShift(){halt();const d=tasks.filter(k=>k.st=='done').length,ok=d==tasks.length&&slept>=120;
   const sum='Tasks: '+d+'/'+tasks.length+'<br>Calls answered: '+ans+'<br>Mistakes: '+miss+'/5<br>Slept: '+fmt(slept)+' / 2h 00m';
   if(ok&&night<5)unlock(night+1);
   if(ok)night<5?showEnd('Night '+night+' complete',sum,'Start night '+(night+1),'next'):showEnd('All 5 nights complete',sum,'Main menu','again');
   else showEnd('Shift failed',sum+'<br>Finish every task and sleep 2 hours.','Retry night '+night,'retry')}
-function startNight(){gapT=0;dingT=0;gt=0;over=false;gate=gateTo=0;doors=[0,0];doorTo=[0,0];dark=0;sleepSt=0;dir=0;fade=.9;miss=0;rep=0;callSt=0;callCool=30;mg=null;slept=0;ans=0;note='';noteT=0;
+function startNight(){hb=false;js=null;gapT=0;dingT=0;gt=0;over=false;gate=gateTo=0;doors=[0,0];doorTo=[0,0];dark=0;sleepSt=0;dir=0;fade=.9;miss=0;rep=0;callSt=0;callCool=30;mg=null;slept=0;ans=0;note='';noteT=0;
   mtxt();initEmps();initNpcs();initJordan();initBrian();initCust();buildTasks();renderCall();closePC();endEl.classList.remove('on');ui()}
 const EMP=[{name:'Sally',door:1,col:'#c0392b',sk:'#e8b99a',hair:'#5a2e1a'},{name:'Richard',door:0,col:'#2e8b4a',sk:'#dba884',hair:'#2b2b2b'},{name:'Phil',door:-1,col:'#d98a2b',sk:'#e3b48c',hair:'#7a4a28',phil:true}];
 const ETH={name:'Ethan',col:'#f4f4f0',sk:'#f0c8a0',hair:'#c9a04a',hat:true},JON={name:'Jonathan',col:'#6a4c93',sk:'#e0b48f',hair:'#444'},HAN={name:'Hannah',col:'#d65a9e',sk:'#c68b62',hair:'#222',phone:true};
@@ -519,7 +574,7 @@ addEventListener('pointerdown',audio);addEventListener('keydown',audio);
 function fx(k,vol,pan,fake){if(!AC||!nb)return;const t0=AC.currentTime;let out=AC.destination;
   if(!fake&&pan&&AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.value=pan;p.connect(out);out=p}
   if(fake){const ph=AC.createBiquadFilter();ph.type='bandpass';ph.frequency.value=1500;ph.Q.value=.6;ph.connect(out);out=ph;vol*=1.3}
-  const ns=(ty,f,q,d,v,at)=>{const s=AC.createBufferSource();s.buffer=nb;const fl=AC.createBiquadFilter();fl.type=ty;fl.frequency.value=f;fl.Q.value=q;const gg=AC.createGain();gg.gain.setValueAtTime(v,at);gg.gain.exponentialRampToValueAtTime(.001,at+d);s.connect(fl);fl.connect(gg);gg.connect(out);s.start(at);s.stop(at+d+.05)};
+  const ns=(ty,f,q,d,v,at)=>{const s=AC.createBufferSource();s.buffer=nb;if(d>.4)s.loop=true;const fl=AC.createBiquadFilter();fl.type=ty;fl.frequency.value=f;fl.Q.value=q;const gg=AC.createGain();gg.gain.setValueAtTime(v,at);gg.gain.exponentialRampToValueAtTime(.001,at+d);s.connect(fl);fl.connect(gg);gg.connect(out);s.start(at);s.stop(at+d+.05)};
   const tn=(f0,f1,d,v,at,ty)=>{const o=AC.createOscillator(),gg=AC.createGain();o.type=ty||'sine';o.frequency.setValueAtTime(f0,at);o.frequency.exponentialRampToValueAtTime(f1,at+d);gg.gain.setValueAtTime(v,at);gg.gain.exponentialRampToValueAtTime(.001,at+d);o.connect(gg);gg.connect(out);o.start(at);o.stop(at+d+.05)};
   if(fake)ns('highpass',3000,.5,.12,vol*.2,t0);
   const v=VOICE[k];
@@ -527,6 +582,9 @@ function fx(k,vol,pan,fake){if(!AC||!nb)return;const t0=AC.currentTime;let out=A
   else if(k=='boing'){tn(150,520,.14,vol,t0);tn(520,200,.22,vol*.7,t0+.14)}
   else if(k=='clank'){ns('bandpass',1900,9,.4,vol,t0);tn(330,300,.35,vol*.5,t0,'square')}
   else if(k=='sting'){tn(110,38,1.4,vol,t0,'sawtooth');tn(117,40,1.4,vol*.8,t0,'sawtooth')}
+  else if(k=='spin'){ns('bandpass',900,1.2,1.0,vol,t0);tn(70,520,.9,vol*.55,t0,'sawtooth');tn(74,555,.9,vol*.55,t0,'sawtooth');tn(320,160,.7,vol*.3,t0,'square')}
+  else if(k=='drone'){tn(55,50,1.3,vol,t0,'sawtooth');tn(58,53,1.3,vol*.9,t0,'sawtooth');tn(1800,1950,1.3,vol*.12,t0,'sine')}
+  else if(k=='scream'){ns('bandpass',1800,1.5,1.7,vol,t0);ns('highpass',3200,.7,1.5,vol*.6,t0);tn(900,1500,1.7,vol*.45,t0,'sawtooth');tn(1350,2200,1.7,vol*.35,t0,'square');tn(450,300,1.7,vol*.55,t0,'sawtooth');tn(110,70,1.7,vol*.7,t0,'sawtooth')}
   else if(k=='static'){ns('highpass',900,.5,.9,vol,t0)}
   else if(k=='ding'){tn(2700,2700,.4,vol*.6,t0,'sine');tn(4050,4050,.25,vol*.25,t0,'sine')}
   else if(k=='ping'){tn(1046,1046,.28,vol*.55,t0,'sine');tn(1568,1568,.5,vol*.5,t0+.16,'sine')}
@@ -541,8 +599,8 @@ function bub(txt){g.font='bold 13px system-ui,sans-serif';const tw=g.measureText
 function initBrian(){bri={st:'idle',idle:0,pres:0,lt:0,line:BLINES[0]}}
 function simBrian(gm){const B=bri,left=tasks.some(k=>k.st!='done'),run=tasks.some(k=>k.st=='run');
   if(B.st=='idle'){if(!left||run){B.idle=0;return}B.idle+=gm;
-    if(B.idle>15&&gt/60>=30&&eth.st=='idle'&&jon.st=='idle'&&quiet()){B.st='here';B.pres=20;B.lt=0;gateTo=0;dir=0;fade=.9;ui();if(sleepSt!=0){dead('Caught sleeping','Brian came to the desk and found you asleep.');return}}}
-  else{if(sleepSt!=0){dead('Caught sleeping','Brian found you asleep at the desk.');return}B.pres-=gm;B.lt-=gm;if(B.lt<=0){B.line=BLINES[Math.floor(Math.random()*BLINES.length)];B.lt=4}if(B.pres<=0||!left){B.st='idle';B.idle=0;gapT=5+Math.random()*5}}}
+    if(B.idle>15&&gt/60>=30&&eth.st=='idle'&&jon.st=='idle'&&quiet()){B.st='here';B.pres=20;B.lt=0;gateTo=0;dir=0;fade=.9;ui();if(sleepSt!=0){scare(BRI,'Caught sleeping','Brian came to the desk and found you asleep.');return}}}
+  else{if(sleepSt!=0){scare(BRI,'Caught sleeping','Brian found you asleep at the desk.');return}B.pres-=gm;B.lt-=gm;if(B.lt<=0){B.line=BLINES[Math.floor(Math.random()*BLINES.length)];B.lt=4}if(B.pres<=0||!left){B.st='idle';B.idle=0;gapT=5+Math.random()*5}}}
 const JLINE='Wanna go to my secret fishing spot?',crashEl=document.getElementById('crash');
 function initJordan(){jor={off:night<4,st:'idle',want:false,acc:0,tm:0,n:0,bt:0};try{speechSynthesis.cancel()}catch(x){}}
 window.summonJordan=()=>{if(jor)jor.want=true;return'Jordan is on his way...'};
@@ -572,7 +630,7 @@ function simNpc(gm,dt){
   if(E.st=='idle'){E.wait-=gm;if(E.wait<=0){if(jon.st=='idle'&&quiet()){E.st='bounce';E.tm=4;E.bt=0}else E.wait=rnd(1,3)}}
   else if(E.st=='bounce'){E.tm-=dt;E.bt-=dt;if(E.bt<=0){fx('boing',.1+.5*(1-Math.max(0,E.tm)/4),0,false);E.bt=.5}if(E.tm<=0){E.st='here';E.pres=15;E.lt=0;E.cg=0;closePC();dir=0;fade=.9;ui()}}
   else{E.pres-=gm;E.lt-=gm;if(E.lt<=0){E.line=LINES[Math.floor(Math.random()*LINES.length)];E.lt=3}
-    if(sleepSt!=0&&!(gate>=.95&&gateTo==1)){dead('Caught sleeping','Ethan wandered up to the desk and found you asleep.');return}
+    if(sleepSt!=0&&!(gate>=.95&&gateTo==1)){scare(ETH,'Caught sleeping','Ethan wandered up to the desk and found you asleep.');return}
     E.cg=(gate>=.95&&gateTo==1)?E.cg+gm:0;if(E.pres<=0||E.cg>=5){if(E.cg>=5)say('Ethan gave up and left.');gapT=5+Math.random()*5;E.st='idle';E.wait=rnd(45,60)*ef();E.cg=0}}
   if(jon.st=='idle'){jon.wait-=gm;if(jon.wait<=0){if(eth.st=='idle'&&quiet()){jon.st='clank';jon.tm=2;fx('clank',.8,0,false)}else jon.wait=rnd(1,3)}}
   else if(jon.st=='clank'){jon.tm-=gm;if(jon.tm<=0){if(callSt==0){startCall(true);jon.st='call'}else jon.tm=.5}}
@@ -585,7 +643,27 @@ function initEmps(){emps=EMP.filter(e=>on(e.name)).map((e,i)=>({...e,inside:true
 function toggleDoor(i){if(busy==i)return;doorTo[i]=1-doorTo[i];plock=true}
 function toggleGate(){if(gateTo==0&&bbusy()){say('You cannot close the gate on Brian.');return}gateTo=1-gateTo;plock=true}
 function dead(a,b){if(over)return;halt();showEnd(a,b,'Retry night '+night,'retry')}
-function caught(e){dead('Caught sleeping',e.name+' opened the door and found you asleep.')}
+const RM=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(x){return false}})();
+function scare(e,a,b){if(over)return;halt();dark=0;sleepSt=0;closePC();toastEl.classList.remove('on');js={e,a,b,t:0,f:[0,0,0]}}
+function scareFace(e,h,open,jx,jy){const cx=480+jx,hy=270+jy,by=hy+h*.9,hr=h*.1;body(cx,by,h,e,0);
+  O(cx-hr*.38,hy+hr*.05,hr*.27,hr*.31,'#fff');O(cx+hr*.38,hy+hr*.05,hr*.27,hr*.31,'#fff');O(cx-hr*.38,hy+hr*.08,hr*.09,hr*.12,'#000');O(cx+hr*.38,hy+hr*.08,hr*.09,hr*.12,'#000');
+  g.strokeStyle='#111';g.lineWidth=Math.max(1,hr*.11);g.beginPath();g.moveTo(cx-hr*.72,hy-hr*.34);g.lineTo(cx-hr*.12,hy-hr*.1);g.moveTo(cx+hr*.72,hy-hr*.34);g.lineTo(cx+hr*.12,hy-hr*.1);g.stroke();
+  const mh=hr*(.1+.5*open);O(cx,hy+hr*.52,hr*.42,mh,'#1a0404');R(cx-hr*.34,hy+hr*.52-mh*.95,hr*.68,Math.max(1,hr*.12),'#f2f0e6')}
+function jsFrame(dt){const J=js;J.t+=dt;const T0=J.t,ex=T0>1.8?Math.min(1,(T0-1.8)/.2):0;
+  if(!J.f[0]){J.f[0]=1;fx('spin',.65,0,false)}
+  if(T0>=.9&&!J.f[1]){J.f[1]=1;fx('drone',.5,0,false)}
+  if(T0>=1.5&&!J.f[2]){J.f[2]=1;fx('scream',.8,0,false)}
+  R(0,0,W,H,'#000');
+  if(T0<.9){const p=T0/.9,e=1-Math.pow(1-p,3),ang=e*Math.PI*5,z=1+.25*p;
+    for(let k=2;k>=0;k--){g.save();g.globalAlpha=k==0?1:.28;g.translate(W/2,H/2);g.rotate(ang-k*.22);g.scale(z,z);g.translate(-W/2,-H/2);views[dir]();g.restore()}
+    R(0,0,W,H,'rgba(120,0,0,'+(.45*p)+')')}
+  else if(T0<1.5){const p=(T0-.9)/.6,fl=RM?1:(Math.sin(T0*50)>.7?.6:1);g.save();g.globalAlpha=fl;scareFace(J.e,230+80*p,0,0,0);g.restore();R(0,0,W,H,'rgba(0,0,0,'+(.5-.25*p)+')')}
+  else if(T0<1.8){const p=(T0-1.5)/.3,e=p*p*p,h=300+2900*e,sh=RM?0:8*p;scareFace(J.e,h,.2+.8*p,(Math.random()-.5)*sh*2,(Math.random()-.5)*sh*2)}
+  else if(T0<3.1){const sh=RM?0:16;R(0,0,W,H,'#2a0000');scareFace(J.e,3200,.5+.5*Math.sin(T0*34),(Math.random()-.5)*sh*2,(Math.random()-.5)*sh*2);
+    if(!RM){const f=Math.floor(T0*16)%3;if(f==0)R(0,0,W,H,'rgba(200,0,0,.5)');else if(f==1)R(0,0,W,H,'rgba(255,255,255,.22)')}
+    for(let i=0;i<24;i++)R(Math.random()*W,Math.random()*H,40+Math.random()*300,1+Math.random()*3,'rgba(255,255,255,.35)')}
+  else{for(let i=0;i<90;i++)R(Math.random()*W,Math.random()*H,20+Math.random()*200,1+Math.random()*4,'rgba(255,255,255,'+(.2+Math.random()*.4)+')');if(T0>3.35){js=null;showEnd(J.a,J.b,'Retry night '+night,'retry')}}}
+function caught(e){scare(e,'Caught sleeping',e.name+' opened the door and found you asleep.')}
 function simEmp(gm,dt){emps.forEach(e=>{
   if(e.st=='idle'){e.wait-=gm;if(e.wait<=0&&e.wait>-1e8&&!(!slot&&eth.st=='idle'&&jon.st=='idle'&&!xbusy()&&gapT<=0&&(!e.phil||callSt==0))&&e.wait<1e8)e.wait=rnd(2,lv().blk);
   if(e.wait<=0&&!slot&&eth.st=='idle'&&jon.st=='idle'&&!xbusy()&&gapT<=0&&(!e.phil||callSt==0)){slot=e;e.d=e.door<0?(Math.random()<.5?0:1):e.door;if(e.phil&&!e.inside){e.st='knock';e.tm=5;e.stepT=0;e.ret=true}else{busy=e.d;e.st='steps';e.tm=4;e.stepT=0}}}
@@ -606,12 +684,15 @@ document.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.
 addEventListener('keyup',e=>{if(e.code=='Space')e.preventDefault()});
 const inR=(x,y,r)=>x>=r[0]&&x<=r[0]+r[2]&&y>=r[1]&&y<=r[1]+r[3],pcOK=()=>!over&&!(eth&&eth.st=='here')&&!jbusy()&&sleepSt!=1&&sleepSt!=2;
 const hit=e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
+  if(hb){if(inR(x,y,[HBX,HBY,HBW,HBH])){if(inR(x,y,PRV)&&hbP>0)return'hbp';if(inR(x,y,NXT)&&hbP<HB.length-1)return'hbn';return null}return'hbx'}
+  if(dir==0&&!over&&sleepSt==0&&inR(x,y,HBR))return'hb';
   if(dir==0&&cust&&cust.st=='ask'&&pcOK()&&gate<.5){const bs=cbt();for(let i=0;i<bs.length;i++)if(inR(x,y,bs[i]))return'c'+i}
   if(dir==0&&pcOK()){if(mg){if(Math.hypot(x-mg.x,y-mg.y)<=mg.r+5)return'dot'}
     else{for(let i=0;i<tasks.length;i++)if(inR(x,y,tbR(i)))return't'+i;if(callSt==1&&inR(x,y,ansR))return'ans'}}
   if(dir==0&&Math.hypot(x-915,y-500)<40)return'gate';
   if((dir==1||dir==3)&&x>364&&x<612&&y>90&&y<400)return'door';return null};
-function canvasClick(e){if(over||menu||sleepSt==1)return;const h=hit(e),pcH=h&&(h=='dot'||h=='ans'||h[0]=='t'||h[0]=='c');if(moving()&&!pcH)return;
+function canvasClick(e){if(over||menu||sleepSt==1)return;if(hb){const q=hit(e);if(q=='hbx')hb=false;else if(q=='hbp')hbP--;else if(q=='hbn')hbP++;return}const h=hit(e),pcH=h&&(h=='dot'||h=='ans'||h[0]=='t'||h[0]=='c');if(moving()&&!pcH)return;
+  if(h=='hb'){openHB();return}
   if(h=='gate')toggleGate();if(h=='door')toggleDoor(dir==3?1:0);
   if(h=='dot')dotHit();else if(h=='ans')answerCall();else if(h&&h[0]=='t')taskBtn(+h.slice(1));else if(h&&h[0]=='c')answerCust(+h.slice(1))}
 c.addEventListener('click',canvasClick);
@@ -620,7 +701,7 @@ const menuEl=document.getElementById('menu'),mMain=document.getElementById('mMai
 function saveU(){try{localStorage.setItem('fnasd2_unlocked',String(unlocked))}catch(x){}}
 function unlock(n){if(n>unlocked){unlocked=Math.min(5,n);saveU()}}
 function buildNights(){nlist.innerHTML='';for(let i=1;i<=5;i++){const b=document.createElement('button'),ok=i<=unlocked;b.disabled=!ok;b.innerHTML='<b>Night '+i+'</b><small>'+(ok?'Unlocked':'Locked')+'</small>';b.onclick=()=>startFromMenu(i);nlist.appendChild(b)}}
-function showMenu(screen){menu=true;document.body.classList.add('inmenu');menuEl.style.display='flex';mMain.style.display=screen?'none':'flex';mNights.style.display=screen?'flex':'none';
+function showMenu(screen){js=null;menu=true;document.body.classList.add('inmenu');menuEl.style.display='flex';mMain.style.display=screen?'none':'flex';mNights.style.display=screen?'flex':'none';
   uForm.style.display='none';uMsg.textContent='';uCode.value='';toastEl.classList.remove('on');toastEl.textContent='';try{speechSynthesis.cancel()}catch(x){}if(screen)buildNights()}
 function startFromMenu(n){if(n>unlocked)return;night=n;menu=false;document.body.classList.remove('inmenu');menuEl.style.display='none';startNight()}
 document.getElementById('play').onclick=()=>showMenu(1);
