@@ -48,7 +48,7 @@ button:hover{border-color:var(--fg)}button:focus-visible{outline:2px solid var(-
 #tcOut{margin-top:10px;min-height:20px;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,monospace;color:#cfd6df;max-height:230px;overflow:auto}
 body.inmenu #top,body.inmenu #bot{visibility:hidden}
 </style></head><body>
-<div class="bar" id="top"><div id="lab">Front desk</div><button id="Z">Sleep</button><div id="mist">Mistakes 0/5 · Reports 0/3</div></div>
+<div class="bar" id="top"><div id="lab">Front desk</div><button id="Z">Sleep</button><div id="mist">Mistakes 0/5</div></div>
 <div id="stage"><canvas id="c" width="960" height="540" aria-label="Front desk office, view from the chair"></canvas><div id="menu"><h1>Five Nights at Service Desk 2</h1>
 <div id="mMain"><p class="sub">Finish your tasks. Get your sleep. Do not get caught.</p><button id="play">Play Game</button></div>
 <div id="mNights"><div id="nlist"></div><button id="mBack">Back</button>
@@ -61,7 +61,7 @@ const c=document.getElementById('c'),g=c.getContext('2d'),W=960,H=540;
 let dir=0,fade=0,t=0,gate=0,gateTo=0,doors=[0,0],doorTo=[0,0],dark=0,sleepSt=0,gt=0,over=false,last=0;
 const ease=k=>k*k*(3-2*k);
 let menu=true,unlocked=1,gapT=0;
-const MGR=[[4,6,1.9,2.4],[7,10,1.7,2.1],[10,14,1.35,1.65],[13,17,1.15,1.4],[16,21,1.0,1.25]];
+const MGR=[[4,6,1.9,2.4],[7,10,1.7,2.1],[10,14,1.35,1.65],[17,22,.72,.88],[22,28,.64,.76]];
 const LV=[{h:1,emp:1,call:40,stall:.022,blk:20,han:1.5,ph:0},{h:1,emp:1,call:40,stall:.029,blk:20,han:1.25,ph:0},{h:.65,emp:.9,call:22,stall:.040,blk:12,han:.95,ph:1},{h:.45,emp:.8,call:13,stall:.048,blk:7,han:.7,ph:1},{h:.3,emp:.7,call:12,stall:.056,blk:5,han:.5,ph:2}];
 const lv=()=>LV[night-1];
 const ACT=[['Brian','Sally'],['Brian','Sally','Richard'],['Brian','Sally','Richard','Phil'],['Brian','Sally','Richard','Phil','Jonathan','Hannah','Ethan'],['Brian','Sally','Richard','Phil','Jonathan','Hannah','Ethan']];
@@ -69,7 +69,7 @@ const on=n=>ACT[night-1].includes(n);
 try{const u=parseInt(localStorage.getItem('fnasd2_unlocked'));if(u>=1&&u<=5)unlocked=u}catch(x){}
 const anyMove=()=>Math.abs(gate-gateTo)>1e-6||Math.abs(doors[0]-doorTo[0])>1e-6||Math.abs(doors[1]-doorTo[1])>1e-6;
 const moving=()=>plock;
-let tasks=[],miss=0,callSt=0,callT=0,callCool=30,mg=null,slept=0,ans=0,night=1,pcOpen=false,note='',noteT=0,endMode='next',plock=false,busy=-1,emps=[],slot=null,eth=null,jon=null,han=null,cust=null,fdoor=0,rep=0,hb=false,hbP=0,js=null,tcOpen=false,zb=null,callRage=false,callMax=5,ringT=0,jor=null,bri=null,dingT=0,dingN=0;
+let tasks=[],miss=0,callSt=0,callT=0,callCool=30,mg=null,slept=0,ans=0,night=1,pcOpen=false,note='',noteT=0,endMode='next',plock=false,busy=-1,emps=[],slot=null,eth=null,jon=null,han=null,cust=null,fdoor=0,hb=false,hbP=0,js=null,tcOpen=false,zb=null,callRage=false,callMax=5,ringT=0,jor=null,bri=null,dingT=0,dingN=0;
 const DEF={upload:['Ticket Upload'],sorter:['Ticket Sorter'],del:['Ticket Auto Delete']};
 const EVENTS=[['Error','Something went wrong. Click Continue to retry.'],['Click to continue','The task is waiting for you.'],['Are you still there?','Confirm you are still at your desk.'],['Idle Check','Idle check: confirm to keep going.']];
 const PLAN=[['upload'],['upload'],['upload','sorter'],['upload','sorter'],['upload','sorter','del']];
@@ -424,7 +424,7 @@ function drawCust(){const C=cust,q=custPos();cbody(q.x,q.by,q.h,C.who,q.bob);
 }
   else if(C.st=='resp')qbub(C.line)}
 function initCust(){cust={st:'idle',want:false,wait:rnd(20,CW[night-1][1]),tm:0,p:0,pat:0,who:null,last:null,rq:[],q:'',opts:['',''],okIdx:0,line:'',dx:0};fdoor=0}
-function startCust(w0){const C=cust;let w=w0;if(!w)do{w=CPOOL[Math.floor(Math.random()*CPOOL.length)]}while(CPOOL.length>1&&w==C.last);C.last=w;C.who=w;C.kind=w.kind||null;C.wt=0;C.pat=0;C.after=null;
+function startCust(w0){const C=cust;let w=w0;if(!w)do{w=CPOOL[Math.floor(Math.random()*CPOOL.length)]}while(CPOOL.length>1&&(w==C.last||(w.kind=='mike'&&callSt!=0)));C.last=w;C.who=w;C.kind=w.kind||null;C.wt=0;C.pat=0;C.after=null;
   if(C.kind){const d=KD[C.kind];C.q=d.q;C.okIdx=-1;C.opts=d.o?d.o.slice():TYL.slice().sort(()=>Math.random()-.5).slice(0,2);
     if(C.kind=='jam'){const j=JQ[Math.floor(Math.random()*JQ.length)];C.q=j[0];C.opts=[j[1],j[2]]}}
   else{let qi;do{qi=Math.floor(Math.random()*QS.length)}while(C.rq.includes(qi));C.rq.push(qi);if(C.rq.length>4)C.rq.shift();
@@ -439,14 +439,14 @@ function answerCust(i){const C=cust;if(!C||C.st!='ask'||C.kind=='pat')return;C.s
 function simCust(gm,dt){const C=cust;
   const tgt=(C.st=='enter'||(C.st=='walk'&&C.p<.3)||(C.st=='leave'&&C.p<.35))?1:0;
   fdoor+=Math.max(-dt,Math.min(dt,tgt-fdoor));
-  if(C.st=='idle'){C.wait-=gm;if(C.wait<=0){C.want=true;if(eth.st=='idle'&&jon.st=='idle'&&!emps.some(e=>e.st!='idle')&&callSt==0&&!xbusy())startCust()}}
+  if(C.st=='idle'){C.wait-=gm;if(C.wait<=0){C.want=true;if(eth.st=='idle'&&jon.st=='idle'&&!emps.some(e=>e.st!='idle')&&!xbusy())startCust()}}
   else if(C.st=='enter'){C.tm-=dt;if(C.tm<=0){C.st='walk';C.p=0}}
   else if(C.st=='walk'){C.p+=dt/5;if(C.p>=1){C.p=1;C.st='ask';C.pat=0;C.wt=0;if(C.kind=='mike'){C.st='resp';C.tm=1.8;C.line=C.q;C.after='call'}}}
   else if(C.st=='ask'){const K=C.kind;C.wt+=gm;
-    const out=(line,m,r)=>{C.st='resp';C.tm=1.6;C.line=line;if(m)mistake(m);if(r)report(r)};
+    const out=(line,m)=>{C.st='resp';C.tm=1.6;C.line=line;if(m)mistake(m)};
     if(K=='pat')C.q=PREACH[Math.min(PREACH.length-1,Math.floor(C.wt/4))];
     if(gateTo>0){if(K=='chas'||K=='book')out('Hmph! Fine!');else if(K=='pat')out('Bless you anyway.');else out(K=='jam'?'How dare you!':'How rude!','You closed the gate on a customer.')}
-    else if(sleepSt==1||sleepSt==2){C.pat+=gm;if(C.pat>=5)out('I am reporting you!',null,'A customer reported you for sleeping.')}else C.pat=0;
+    else if(asl()){C.pat+=dt;if(C.pat>=5)out('Hello?! Are you ASLEEP?!','A customer caught you sleeping.')}else C.pat=0;
     if(C.st=='ask'){if(K=='pat'&&C.wt>=20)out('God bless you!');else if(K=='tyl'&&C.wt>=10)out('Ha, see ya.');else if(K=='jam'&&C.wt>=15)out('Hmph.')}}
   else if(C.st=='resp'){C.tm-=dt;if(C.tm<=0){C.st='leave';if(C.after=='call'){C.after=null;if(callSt==0)startCall(false)}}}
   else if(C.st=='leave'){C.p-=dt/4;if(C.p<=0){C.p=0;C.st='idle';C.wait=rnd(CW[night-1][0],CW[night-1][1]);gapT=5+Math.random()*5;C.who=null}}}
@@ -488,12 +488,12 @@ const HB=[
 {t:'Section 2: Rest, Reviews and Phones',s:[
 ['2.1 Company-Approved Rest','To pass your shift you must rest for 2 hours in total. Press Sleep: 3 seconds to doze off, 2 seconds to wake. You can only nap facing the front desk, and you cannot turn while asleep. Cancelling before you are fully asleep is instant. Time runs at 2x while resting; the iPad tracks your total.'],
 ['2.2 Passing the Shift','Complete every ticket AND log 2 hours of rest. The shift passes automatically the moment both are done. Anything less and you are sent home at 6:00 PM.'],
-['2.3 Performance Reviews','5 Mistakes and you are terminated. 3 Customer Reports and you are also terminated. Napping in the wrong place is a faster form of termination (see Sections 4 and 5).'],
+['2.3 Performance Reviews','5 Mistakes and you are terminated. Napping in the wrong place is a faster form of termination (see Sections 4 and 5).'],
 ['2.4 Phones','A ringing phone has 5 seconds to be answered on the monitor. Then click every dot before time runs out. Missed, failed or ignored calls count as Mistakes. Phones are for staff only; customers are handled in person.']]},
 {t:'Section 3: Customers',s:[
 ['3.1 Greeting Procedure','Customers enter through the automatic door (listen for the ping) and walk to your desk. Answer their question by clicking a button. A wrong answer is a Mistake. Customers will wait forever. They have nowhere else to be.'],
 ['3.2 The Gate','Closing the gate on a waiting customer is a Mistake, with a few exceptions listed in Section 6. The gate is for enemies, not for customers who just want to know how to turn on a computer.'],
-['3.3 Napping on Duty','If you are asleep in front of a waiting customer for 5 seconds, they file a Report. Three Reports end your career. Please nap responsibly, and in the correct order of events.'],
+['3.3 Napping on Duty','If you are asleep in front of a waiting customer for 5 seconds, it counts as a Mistake. Dozing off is safe, but being fully asleep (or still waking up) when someone arrives is not. Please nap responsibly.'],
 ['3.4 Visibility','While you are resting you cannot see the front door open, though you may faintly notice shapes approaching. This is considered a feature.']]},
 {t:'Section 4: Staff Movements',s:[
 ['4.1 Sally (Left Entrance) and 4.2 Richard (Right Door)','They walk to their door. You hear footsteps for 4 seconds, then the door opens. If you are asleep or still waking up when it opens, they find you and you are terminated. Wake up early. Walk your own steps.'],
@@ -542,7 +542,7 @@ const TC={
  SALLY:{d:'Sally comes to the left door',f:1,r:()=>tcEmp('Sally')},RICHARD:{d:'Richard comes to the right door',f:1,r:()=>tcEmp('Richard')},PHIL:{d:'Phil returns knocking with food',f:1,r:()=>tcEmp('Phil')},
  ETHAN:{d:'Ethan bounces up to the desk',f:1,r:()=>{eth.st='bounce';eth.tm=4;eth.bt=0;gapT=0}},
  JON:{d:'Jonathan phone call',f:1,r:()=>{jon.st='clank';jon.tm=2;gapT=0;fx('clank',.8,0,false)}},
- BRIAN:{d:'Brian comes to the desk',f:1,r:()=>{const B=bri;B.st='here';B.pres=20;B.lt=0;gateTo=0;dir=0;fade=.9;ui();closePC();gapT=0;if(sleepSt!=0)scare(BRI,'Caught sleeping','Brian came to the desk and found you asleep.')}},
+ BRIAN:{d:'Brian comes to the desk',f:1,r:()=>{const B=bri;B.st='here';B.pres=20;B.lt=0;gateTo=0;dir=0;fade=.9;ui();closePC();gapT=0;if(asl())scare(BRI,'Caught sleeping','Brian came to the desk and found you asleep.')}},
  JORDAN:{d:'summon Jordan',f:0,r:()=>{jor.off=false;jor.want=true}},
  HANNAH:{d:'Hannah fake sound',f:0,r:()=>{const k=HK[Math.floor(Math.random()*HK.length)];han.busy=fakeSnd(k)+.5;return'Hannah made a fake '+k+' sound.'}},
  CALL:{d:'normal phone call',f:1,r:()=>{gapT=0;startCall(false)}},
@@ -550,7 +550,7 @@ const TC={
  TASKS:{d:'finish all tickets',f:0,r:()=>{tasks.forEach(k=>{k.p=100;k.st='done'})}},
  NAP:{d:'give 2 hours of rest',f:0,r:()=>{slept=120}},
  WIN:{d:'finish tickets + rest (win)',f:0,r:()=>{tasks.forEach(k=>{k.p=100;k.st='done'});slept=120}},
- CLEAR:{d:'clear mistakes and reports',f:0,r:()=>{miss=0;rep=0;mtxt()}},
+ CLEAR:{d:'clear mistakes',f:0,r:()=>{miss=0;mtxt()}},
  SCARE:{d:'preview a jumpscare',f:0,r:()=>{const a=[ETH,BRI,...EMP];scare(a[Math.floor(Math.random()*a.length)],'Caught sleeping','Test jumpscare.')}},
  NIGHT1:{d:'restart on night 1',f:0,r:()=>{night=1;startNight()}},NIGHT2:{d:'restart on night 2',f:0,r:()=>{night=2;startNight()}},NIGHT3:{d:'restart on night 3',f:0,r:()=>{night=3;startNight()}},NIGHT4:{d:'restart on night 4',f:0,r:()=>{night=4;startNight()}},NIGHT5:{d:'restart on night 5',f:0,r:()=>{night=5;startNight()}}};
 function openTC(){if(over||menu||sleepSt!=0)return;hb=false;tcOpen=true;tcEl.classList.add('on');tcOut.textContent='Type HELP for the list of codes.';tcIn.value='';setTimeout(()=>tcIn.focus(),30)}
@@ -567,9 +567,9 @@ function ui(){lab.textContent='Night '+night+': '+names[dir]}
 function turn(n){if(over||menu||hb||tcOpen)return;if(sleepSt!=0){say('You cannot move while sleeping.');return}if((eth&&eth.st=='here')||jbusy()||bbusy()||pbusy()){say(jbusy()?'You cannot look away.':bbusy()?'Brian is talking to you.':pbusy()?'Patrika is talking to you.':'Ethan is at the desk');return}if(moving()){say('Wait until it finishes moving');return}closePC();dir=(dir+n+4)%4;fade=.9;ui()}
 document.getElementById('L').onclick=()=>turn(-1);
 document.getElementById('Rb').onclick=()=>turn(1);
-addEventListener('keydown',e=>{if(e.key=='Escape')hb=false;if(e.code=='Space'){e.preventDefault();if(!e.repeat&&!over&&!menu&&!hb&&!tcOpen&&sleepSt!=1&&!moving()){if(dir==1||dir==3)toggleDoor(dir==3?1:0);else if(dir==0)toggleGate()}return}if(e.key=='ArrowLeft'||e.key=='a'||e.key=='A')turn(-1);if(e.key=='ArrowRight'||e.key=='d'||e.key=='D')turn(1)});
+addEventListener('keydown',e=>{if(e.key=='Escape')hb=false;if(e.code=='Space'){e.preventDefault();if(!e.repeat&&!over&&!menu&&!hb&&!tcOpen&&sleepSt!=1&&sleepSt!=3&&!moving()){if(dir==1||dir==3)toggleDoor(dir==3?1:0);else if(dir==0)toggleGate()}return}if(e.key=='ArrowLeft'||e.key=='a'||e.key=='A')turn(-1);if(e.key=='ArrowRight'||e.key=='d'||e.key=='D')turn(1)});
 const Z=document.getElementById('Z');
-Z.onclick=()=>{if(over||menu||hb||tcOpen)return;if(bbusy()&&(sleepSt==0||sleepSt==3)){say('Brian is talking to you.');return}
+Z.onclick=()=>{if(over||menu||hb||tcOpen)return;if(sleepSt==3){say('You are still waking up.');return}if(bbusy()&&(sleepSt==0||sleepSt==3)){say('Brian is talking to you.');return}
   if(sleepSt==0||sleepSt==3){if(dir!=0){say('You can only sleep facing the front desk.');return}sleepSt=1;closePC()}
   else if(sleepSt==1){sleepSt=0;dark=0}
   else sleepSt=3};
@@ -584,20 +584,19 @@ function taskBtn(i){const k=tasks[i];if(over||k.st=='done')return;
   if(k.st=='run'){k.st='paused';return}
   tasks.forEach((o,j)=>{if(j!=i&&o.st=='run')o.st='paused'});k.st='run';k.ev=null;k.grace=5}
 function renderCall(){if(callSt==0)callRage=false}
-function answerCall(){if(callSt!=1)return;callSt=2;const r=MGR[night-1],need=Math.floor(r[0]+Math.random()*(r[1]-r[0]+1));let life=Math.max(10,Math.min(30,need*(r[2]+Math.random()*(r[3]-r[2]))));if(night>=4)life=Math.max(need*.9,life-(1+Math.random()*4));mg={n:0,need,life,t:life,x:0,y:0,r:10};newDot()}
+function answerCall(){if(callSt!=1)return;callSt=2;const r=MGR[night-1],need=Math.floor(r[0]+Math.random()*(r[1]-r[0]+1));let life=Math.max(10,Math.min(30,need*(r[2]+Math.random()*(r[3]-r[2]))));mg={n:0,need,life,t:life,x:0,y:0,r:10};newDot()}
 function dotHit(){mg.n++;if(mg.n>=mg.need)endCall(true);else newDot()}
 function newDot(){if(!mg)return;mg.r=(36-2*night)/2;mg.x=SX+4+mg.r+Math.random()*(SW-8-2*mg.r);mg.y=SY+18+mg.r+Math.random()*(SH-22-2*mg.r-4)}
 function endCall(ok){callSt=0;callCool=20;gapT=5+Math.random()*5;mg=null;renderCall();if(ok){ans++;say('Call completed')}else mistake('Call failed')}
-function mtxt(){mistEl.textContent='Mistakes '+miss+'/5 · Reports '+rep+'/3'}
+function mtxt(){mistEl.textContent='Mistakes '+miss+'/5'}
 function mistake(m){miss++;mtxt();say(m);if(miss>=5)lose()}
-function report(m){rep++;mtxt();say(m);if(rep>=3&&!over){halt();showEnd('You lost','Three customer reports. You were fired.','Retry night '+night,'retry')}}
 function sim(gm,dt){
   if(gapT>0)gapT-=gm;
   tasks.forEach(k=>{if(k.st=='run'){k.p+=gm;k.grace-=gm;
     if(k.p>=100){k.p=100;k.st='done';say(k.name+' complete')}
     else if(k.grace<=0&&Math.random()<gm*lv().stall){k.st='stalled';k.ev=EVENTS[Math.floor(Math.random()*4)];dingT=5;dingN=0}}});
   if(dingT>0){dingT-=dt;dingN-=dt;if(dingN<=0){fx('ding',.32,0,false);dingN=.5}if(!tasks.some(k=>k.st=='stalled'))dingT=0}
-  if(callSt==0){callCool-=gm;if(callCool<=0&&eth.st=='idle'&&jon.st=='idle'&&!xbusy()&&gapT<=0&&!emps.some(e=>e.phil&&e.st!='idle')&&Math.random()<gm/lv().call)startCall(false)}
+  if(callSt==0){callCool-=gm;if(callCool<=0&&eth.st=='idle'&&jon.st=='idle'&&!jbusy()&&!bbusy()&&gapT<=0&&!emps.some(e=>e.phil&&e.st!='idle')&&Math.random()<gm/lv().call)startCall(false)}
   else if(callSt==1){ringT-=dt;if(ringT<=0){fx('ring',.45,0,false);ringT=callRage?.7:1.2}callT-=callRage?gm:dt;if(callT<=0){callSt=0;callCool=20;gapT=5+Math.random()*5;renderCall();mistake('Missed call')}}
   else if(mg){mg.t-=dt;if(mg.t<=0)endCall(false)}
   simEmp(gm,dt);simNpc(gm,dt);simJordan(dt,gm);simBrian(gm);simCust(gm,dt)}
@@ -609,7 +608,7 @@ function endShift(){halt();const d=tasks.filter(k=>k.st=='done').length,ok=d==ta
   if(ok&&night<5)unlock(night+1);
   if(ok)night<5?showEnd('Night '+night+' complete',sum,'Start night '+(night+1),'next'):showEnd('All 5 nights complete',sum,'Main menu','again');
   else showEnd('Shift failed',sum+'<br>Finish every task and sleep 2 hours.','Retry night '+night,'retry')}
-function startNight(){zb=null;closeTC();hb=false;js=null;gapT=0;dingT=0;gt=0;over=false;gate=gateTo=0;doors=[0,0];doorTo=[0,0];dark=0;sleepSt=0;dir=0;fade=.9;miss=0;rep=0;callSt=0;callCool=30;mg=null;slept=0;ans=0;note='';noteT=0;
+function startNight(){zb=null;closeTC();hb=false;js=null;gapT=0;dingT=0;gt=0;over=false;gate=gateTo=0;doors=[0,0];doorTo=[0,0];dark=0;sleepSt=0;dir=0;fade=.9;miss=0;callSt=0;callCool=30;mg=null;slept=0;ans=0;note='';noteT=0;
   mtxt();initEmps();initNpcs();initJordan();initBrian();initCust();buildTasks();renderCall();closePC();endEl.classList.remove('on');ui()}
 const EMP=[{name:'Sally',door:1,col:'#c0392b',sk:'#e8b99a',hair:'#5a2e1a'},{name:'Richard',door:0,col:'#2e8b4a',sk:'#dba884',hair:'#2b2b2b'},{name:'Phil',door:-1,col:'#d98a2b',sk:'#e3b48c',hair:'#7a4a28',phil:true}];
 const ETH={name:'Ethan',col:'#f4f4f0',sk:'#f0c8a0',hair:'#c9a04a',hat:true},JON={name:'Jonathan',col:'#6a4c93',sk:'#e0b48f',hair:'#444'},HAN={name:'Hannah',col:'#d65a9e',sk:'#c68b62',hair:'#222',phone:true};
@@ -641,6 +640,8 @@ function fx(k,vol,pan,fake){if(!AC||!nb)return;const t0=AC.currentTime;let out=A
   else if(k=='roar'){ns('bandpass',650,.8,2,vol,t0);ns('lowpass',520,.5,2,vol*.9,t0);tn(130,60,2,vol*.8,t0,'sawtooth');tn(175,85,2,vol*.6,t0,'square');tn(900,500,1.6,vol*.25,t0,'sawtooth')}
   else if(k=='drone'){tn(55,50,1.3,vol,t0,'sawtooth');tn(58,53,1.3,vol*.9,t0,'sawtooth');tn(1800,1950,1.3,vol*.12,t0,'sine')}
   else if(k=='scream'){ns('bandpass',1800,1.5,1.7,vol,t0);ns('highpass',3200,.7,1.5,vol*.6,t0);tn(900,1500,1.7,vol*.45,t0,'sawtooth');tn(1350,2200,1.7,vol*.35,t0,'square');tn(450,300,1.7,vol*.55,t0,'sawtooth');tn(110,70,1.7,vol*.7,t0,'sawtooth')}
+  else if(k=='shut'){ns('lowpass',380,1,.28,vol*1.5,t0);ns('bandpass',1100,2,.07,vol*.5,t0);tn(95,48,.3,vol*1.2,t0,'sine');tn(62,40,.34,vol*.9,t0+.02,'sine')}
+  else if(k=='slam'){ns('lowpass',260,1,.7,vol*1.6,t0);ns('highpass',1200,.7,.35,vol*1.1,t0);tn(70,26,.7,vol*1.6,t0,'sine');tn(180,50,.4,vol,t0,'sawtooth')}
   else if(k=='static'){ns('highpass',900,.5,.9,vol,t0)}
   else if(k=='ding'){tn(2700,2700,.4,vol*.6,t0,'sine');tn(4050,4050,.25,vol*.25,t0,'sine')}
   else if(k=='ping'){tn(1046,1046,.28,vol*.55,t0,'sine');tn(1568,1568,.5,vol*.5,t0+.16,'sine')}
@@ -650,13 +651,13 @@ function fakeSnd(k){const v=VOICE[k],n=v?5:k=='knock'?3:k=='boing'?4:1,gp=v?(v.g
 function startCall(r){ringT=0;callSt=1;callRage=r;callMax=r?3:5;callT=callMax;renderCall()}
 function initNpcs(){eth={st:'idle',cg:0,wait:on('Ethan')?iw(45,300):1e9,tm:0,bt:0,pres:0,lt:0,line:LINES[0]};jon={st:'idle',wait:on('Jonathan')?iw(45,300):1e9,tm:0};han={next:on('Hannah')?iw(40,70):1e9,busy:0,last:null,cd:{}};HK.forEach(k=>han.cd[k]=0)}
 const qcore=()=>!emps.some(e=>e.st!='idle')&&han.busy<=0&&callSt==0&&gapT<=0,quiet0=()=>qcore()&&!(cust&&cust.want),jbusy=()=>jor&&jor.st!='idle',quiet=()=>quiet0()&&!xbusy(),ef=()=>night>=5?.62:night>=4?.8:1,CW=[[70,100],[55,85],[40,65],[34,54],[24,40]];
-const bbusy=()=>bri&&bri.st=='here',cbusy=()=>cust&&cust.st!='idle',xbusy=()=>jbusy()||bbusy()||cbusy();
+const asl=()=>sleepSt==2||sleepSt==3,jq=()=>!emps.some(e=>e.st!='idle')&&han.busy<=0&&callSt==0&&gapT<=0&&!jbusy()&&!bbusy(),bbusy=()=>bri&&bri.st=='here',cbusy=()=>cust&&cust.st!='idle',xbusy=()=>jbusy()||bbusy()||cbusy();
 function bub(txt){g.font='bold 13px system-ui,sans-serif';const tw=g.measureText(txt).width+22,bx=Math.max(132,Math.min(828-tw,300));R(bx,104,tw,30,'#fff');g.strokeStyle='#333';g.lineWidth=1.5;g.strokeRect(bx,104,tw,30);P([[bx+30,134],[bx+52,134],[bx+34,150]],'#fff');T(txt,bx+tw/2,124,13,'#222')}
 function initBrian(){bri={st:'idle',idle:0,pres:0,lt:0,line:BLINES[0]}}
 function simBrian(gm){const B=bri,left=tasks.some(k=>k.st!='done'),run=tasks.some(k=>k.st=='run');
   if(B.st=='idle'){if(!left||run){B.idle=0;return}B.idle+=gm;
-    if(B.idle>15&&gt/60>=30&&eth.st=='idle'&&jon.st=='idle'&&quiet()){B.st='here';B.pres=20;B.lt=0;gateTo=0;dir=0;fade=.9;ui();if(sleepSt!=0){scare(BRI,'Caught sleeping','Brian came to the desk and found you asleep.');return}}}
-  else{if(sleepSt!=0){scare(BRI,'Caught sleeping','Brian found you asleep at the desk.');return}B.pres-=gm;B.lt-=gm;if(B.lt<=0){B.line=BLINES[Math.floor(Math.random()*BLINES.length)];B.lt=4}if(B.pres<=0||!left){B.st='idle';B.idle=0;gapT=5+Math.random()*5}}}
+    if(B.idle>15&&gt/60>=30&&eth.st=='idle'&&jon.st=='idle'&&quiet()){B.st='here';B.pres=20;B.lt=0;gateTo=0;dir=0;fade=.9;ui();if(asl()){scare(BRI,'Caught sleeping','Brian came to the desk and found you asleep.');return}}}
+  else{if(asl()){scare(BRI,'Caught sleeping','Brian found you asleep at the desk.');return}B.pres-=gm;B.lt-=gm;if(B.lt<=0){B.line=BLINES[Math.floor(Math.random()*BLINES.length)];B.lt=4}if(B.pres<=0||!left){B.st='idle';B.idle=0;gapT=5+Math.random()*5}}}
 const JLINE='Wanna go to my secret fishing spot?',crashEl=document.getElementById('crash');
 function initJordan(){jor={off:night<4,st:'idle',want:false,acc:0,tm:0,n:0,bt:0};try{speechSynthesis.cancel()}catch(x){}}
 window.summonJordan=()=>{if(jor)jor.want=true;return'Jordan is on his way...'};
@@ -717,21 +718,23 @@ function simNpc(gm,dt){
   if(E.st=='idle'){E.wait-=gm;if(E.wait<=0){if(jon.st=='idle'&&quiet()){E.st='bounce';E.tm=4;E.bt=0}else E.wait=rnd(1,3)}}
   else if(E.st=='bounce'){E.tm-=dt;E.bt-=dt;if(E.bt<=0){fx('boing',.1+.5*(1-Math.max(0,E.tm)/4),0,false);E.bt=.5}if(E.tm<=0){E.st='here';E.pres=15;E.lt=0;E.cg=0;closePC();dir=0;fade=.9;ui()}}
   else{E.pres-=gm;E.lt-=gm;if(E.lt<=0){E.line=LINES[Math.floor(Math.random()*LINES.length)];E.lt=3}
-    if(sleepSt!=0&&!(gate>=.95&&gateTo==1)){scare(ETH,'Caught sleeping','Ethan wandered up to the desk and found you asleep.');return}
+    if(asl()&&!(gate>=.95&&gateTo==1)){scare(ETH,'Caught sleeping','Ethan wandered up to the desk and found you asleep.');return}
     E.cg=(gate>=.95&&gateTo==1)?E.cg+gm:0;if(E.pres<=0||E.cg>=5){if(E.cg>=5)say('Ethan gave up and left.');gapT=5+Math.random()*5;E.st='idle';E.wait=rnd(45,60)*ef();E.cg=0}}
-  if(jon.st=='idle'){jon.wait-=gm;if(jon.wait<=0){if(eth.st=='idle'&&quiet()){jon.st='clank';jon.tm=2;fx('clank',.8,0,false)}else jon.wait=rnd(1,3)}}
+  if(jon.st=='idle'){jon.wait-=gm*1.5;if(jon.wait<=0){if(eth.st=='idle'&&jq()){jon.st='clank';jon.tm=2;fx('clank',.8,0,false)}else jon.wait=rnd(1,3)}}
   else if(jon.st=='clank'){jon.tm-=gm;if(jon.tm<=0){if(callSt==0){startCall(true);jon.st='call'}else jon.tm=.5}}
   else if(jon.st=='call'&&callSt==0){jon.st='idle';jon.wait=rnd(45,60)*ef()}
   const H=han;H.next-=gm;H.busy-=dt;HK.forEach(k=>H.cd[k]-=gm);
   if(H.next<=0&&eth.st=='idle'&&jon.st=='idle'&&!xbusy()&&callSt==0&&gapT<=0&&!emps.some(e=>e.phil&&e.st!='idle')){const c=HK.filter(k=>k!=H.last&&H.cd[k]<=0);
     if(c.length){const k=c[Math.floor(Math.random()*c.length)];H.busy=fakeSnd(k)+.5;H.cd[k]=rnd(30,70);H.last=k;H.next=rnd(10,30)*lv().han}else H.next=2}}
 const nk=()=>1-.07*(night-1),rnd=(a,b)=>a+Math.random()*(b-a),iw=(a,b)=>lv().h<1?rnd(5,b*lv().h):rnd(a,b);
-function initEmps(){emps=EMP.filter(e=>on(e.name)).map((e,i)=>({...e,inside:true,wait:iw(40,280)*nk(),st:'idle',tm:0,d:0,stepT:0,ret:false,trips:2+(Math.random()<.5?1:0)+lv().ph}));slot=null;busy=-1}
+function initEmps(){emps=EMP.filter(e=>on(e.name)).map((e,i)=>{const o={...e,inside:true,wait:iw(40,280)*nk(),st:'idle',tm:0,d:0,stepT:0,ret:false,trips:2+(Math.random()<.5?1:0)+lv().ph};
+  if(night>=4){const si=Math.random()<.5,ei=Math.random()<.5,big=e.phil&&Math.random()<.5;const N=si==ei?(big?4:2):(big||Math.random()<.35?3:1);o.inside=si;o.left=N;o.gap=280/N;o.wait=rnd(8,o.gap*.8)}
+  return o});slot=null;busy=-1}
 function toggleDoor(i){if(busy==i)return;doorTo[i]=1-doorTo[i];plock=true}
 function toggleGate(){if(gateTo==0&&bbusy()){say('You cannot close the gate on Brian.');return}if(gateTo==0&&jbusy()){say('You cannot close the gate on Jordan.');return}gateTo=1-gateTo;plock=true}
 function dead(a,b){if(over)return;halt();showEnd(a,b,'Retry night '+night,'retry')}
 const RM=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(x){return false}})();
-function scare(e,a,b){if(over)return;halt();dark=0;sleepSt=0;closePC();toastEl.classList.remove('on');js={e,a,b,t:0,f:[0,0,0]}}
+function scare(e,a,b){if(over)return;halt();dark=0;sleepSt=0;closePC();toastEl.classList.remove('on');js={e,a,b,t:0,f:[0,0,0,0]}}
 function scareFace(e,h,open,jx,jy){const cx=480+jx,hy=270+jy,by=hy+h*.9,hr=h*.1;body(cx,by,h,e,0);
   O(cx-hr*.38,hy+hr*.05,hr*.27,hr*.31,'#fff');O(cx+hr*.38,hy+hr*.05,hr*.27,hr*.31,'#fff');O(cx-hr*.38,hy+hr*.08,hr*.09,hr*.12,'#000');O(cx+hr*.38,hy+hr*.08,hr*.09,hr*.12,'#000');
   g.strokeStyle='#111';g.lineWidth=Math.max(1,hr*.11);g.beginPath();g.moveTo(cx-hr*.72,hy-hr*.34);g.lineTo(cx-hr*.12,hy-hr*.1);g.moveTo(cx+hr*.72,hy-hr*.34);g.lineTo(cx+hr*.12,hy-hr*.1);g.stroke();
@@ -779,20 +782,24 @@ function monFrame(J,dt){const T0=J.t,RMx=RM?0:1;
     for(let i=0;i<20;i++)R(Math.random()*W,Math.random()*H,40+Math.random()*300,1+Math.random()*3,'rgba(255,255,255,.28)')}
   else{for(let i=0;i<90;i++)R(Math.random()*W,Math.random()*H,20+Math.random()*200,1+Math.random()*4,'rgba(255,255,255,'+(.2+Math.random()*.4)+')');if(T0>3.6){js=null;showEnd(J.a,J.b,'Retry night '+night,'retry')}}}
 function scareMonster(){if(over)return;halt();dark=0;sleepSt=0;closePC();toastEl.classList.remove('on');zb=null;js={m:true,a:'Eaten',b:'The little blue creature was not so little.',t:0,f:[0,0,0]}}
-function jsFrame(dt){const J=js;J.t+=dt;if(J.m){monFrame(J,dt);return}const T0=J.t,ex=T0>1.8?Math.min(1,(T0-1.8)/.2):0;
-  if(!J.f[0]){J.f[0]=1;fx('spin',.65,0,false)}
-  if(T0>=.9&&!J.f[1]){J.f[1]=1;fx('drone',.5,0,false)}
-  if(T0>=1.5&&!J.f[2]){J.f[2]=1;fx('scream',.8,0,false)}
+function jsFrame(dt){const J=js;J.t+=dt;if(J.m){monFrame(J,dt);return}const T0=J.t,sh0=RM?0:1;
+  if(!J.f[0]){J.f[0]=1;fx('slam',1,0,false);fx('sting',.9,0,false)}
+  if(T0>=.3&&!J.f[1]){J.f[1]=1;fx('roar',1,0,false);fx('drone',.6,0,false)}
+  if(T0>=.85&&!J.f[2]){J.f[2]=1;fx('scream',1,0,false);fx('slam',.9,0,false)}
+  if(T0>=1.5&&!J.f[3]){J.f[3]=1;fx('scream',.9,0,false);fx('roar',.8,0,false)}
   R(0,0,W,H,'#000');
-  if(T0<.9){const p=T0/.9,e=1-Math.pow(1-p,3),ang=e*Math.PI*5,z=1+.25*p;
-    for(let k=2;k>=0;k--){g.save();g.globalAlpha=k==0?1:.28;g.translate(W/2,H/2);g.rotate(ang-k*.22);g.scale(z,z);g.translate(-W/2,-H/2);views[dir]();g.restore()}
-    R(0,0,W,H,'rgba(120,0,0,'+(.45*p)+')')}
-  else if(T0<1.5){const p=(T0-.9)/.6,fl=RM?1:(Math.sin(T0*50)>.7?.6:1);g.save();g.globalAlpha=fl;scareFace(J.e,230+80*p,0,0,0);g.restore();R(0,0,W,H,'rgba(0,0,0,'+(.5-.25*p)+')')}
-  else if(T0<1.8){const p=(T0-1.5)/.3,e=p*p*p,h=300+2900*e,sh=RM?0:8*p;scareFace(J.e,h,.2+.8*p,(Math.random()-.5)*sh*2,(Math.random()-.5)*sh*2)}
-  else if(T0<3.1){const sh=RM?0:16;R(0,0,W,H,'#2a0000');scareFace(J.e,3200,.5+.5*Math.sin(T0*34),(Math.random()-.5)*sh*2,(Math.random()-.5)*sh*2);
-    if(!RM){const f=Math.floor(T0*16)%3;if(f==0)R(0,0,W,H,'rgba(200,0,0,.5)');else if(f==1)R(0,0,W,H,'rgba(255,255,255,.22)')}
+  if(T0<.3){const p=T0/.3,e=p*p*(3-2*p);
+    for(let k=0;k<4;k++){const q=Math.max(0,e-k*.07);g.save();g.globalAlpha=k==0?1:.3;g.translate(W/2,H/2);g.rotate(Math.sin(q*Math.PI)*.22*sh0);g.translate(-W/2,-H/2);g.translate(-q*W,0);views[dir]();g.restore();
+      g.save();g.globalAlpha=k==0?1:.3;g.translate(W/2,H/2);g.rotate(Math.sin(q*Math.PI)*.22*sh0);g.translate(-W/2,-H/2);g.translate(W-q*W,0);views[2]();g.restore()}
+    R(0,0,W,H,'rgba(120,0,0,'+(.35*p)+')')}
+  else if(T0<.85){const p=(T0-.3)/.55,sh=sh0*6;g.save();g.translate((Math.random()-.5)*sh,(Math.random()-.5)*sh);views[2]();g.restore();R(0,0,W,H,'rgba(0,0,0,'+(.45+.1*p)+')');
+    const fl=RM?1:(Math.sin(T0*60)>.5?1:.55);g.save();g.globalAlpha=fl;scareFace(J.e,260+120*p,.1+.4*p,(Math.random()-.5)*sh*2,(Math.random()-.5)*sh*2);g.restore();
+    if(sh0&&Math.random()<.25)R(0,0,W,H,'rgba(255,255,255,.18)')}
+  else if(T0<1.15){const p=(T0-.85)/.3,e=p*p*p,h=380+2800*e,sh=sh0*10*p;scareFace(J.e,h,.3+.7*p,(Math.random()-.5)*sh*2,(Math.random()-.5)*sh*2)}
+  else if(T0<2.7){const sh=sh0*18;R(0,0,W,H,'#2a0000');scareFace(J.e,3200,.5+.5*Math.sin(T0*38),(Math.random()-.5)*sh*2,(Math.random()-.5)*sh*2);
+    if(sh0){const f=Math.floor(T0*18)%3;if(f==0)R(0,0,W,H,'rgba(200,0,0,.5)');else if(f==1)R(0,0,W,H,'rgba(255,255,255,.25)')}
     for(let i=0;i<24;i++)R(Math.random()*W,Math.random()*H,40+Math.random()*300,1+Math.random()*3,'rgba(255,255,255,.35)')}
-  else{for(let i=0;i<90;i++)R(Math.random()*W,Math.random()*H,20+Math.random()*200,1+Math.random()*4,'rgba(255,255,255,'+(.2+Math.random()*.4)+')');if(T0>3.35){js=null;showEnd(J.a,J.b,'Retry night '+night,'retry')}}}
+  else{for(let i=0;i<90;i++)R(Math.random()*W,Math.random()*H,20+Math.random()*200,1+Math.random()*4,'rgba(255,255,255,'+(.2+Math.random()*.4)+')');if(T0>2.95){js=null;showEnd(J.a,J.b,'Retry night '+night,'retry')}}}
 function caught(e){scare(e,'Caught sleeping',e.name+' opened the door and found you asleep.')}
 function simEmp(gm,dt){emps.forEach(e=>{
   if(e.st=='idle'){e.wait-=gm;if(e.wait<=0&&e.wait>-1e8&&!(!slot&&eth.st=='idle'&&jon.st=='idle'&&!xbusy()&&gapT<=0&&(!e.phil||callSt==0))&&e.wait<1e8)e.wait=rnd(2,lv().blk);
@@ -804,15 +811,17 @@ function simEmp(gm,dt){emps.forEach(e=>{
     if(e.tm<=0){e.st='open';doorTo[e.d]=1;e.tm=2.2}}
   else if(e.st=='open'){e.tm-=dt;if(e.tm<=0){e.st='dwell';e.tm=2.5}}
   else if(e.st=='dwell'){e.tm-=dt;if(e.tm<=0){e.st='close';doorTo[e.d]=0;e.tm=2.2}}
-  else if(e.st=='close'){e.tm-=dt;if(e.tm<=0){gapT=5+Math.random()*5;e.st='idle';e.inside=!e.inside;e.wait=(e.inside?rnd(70,130):rnd(50,90))*nk()*lv().emp;slot=null;busy=-1;if(e.phil){if(e.inside){e.ret=false;e.trips--;e.wait=e.trips>0?rnd(60,75):1e9}else e.wait=rnd(35,55)}}}
-  if(e.st=='open'||e.st=='dwell'||e.st=='close'){if(sleepSt!=0&&!e.ret)caught(e)}})}
+  else if(e.st=='close'){e.tm-=dt;if(e.tm<=0){gapT=5+Math.random()*5;e.st='idle';e.inside=!e.inside;fx('shut',1,e.d==1?-.8:.8,false);slot=null;busy=-1;
+    if(e.left!==undefined){e.left--;e.wait=e.left>0?Math.max(8,rnd(.6,1)*e.gap-12):1e9;if(e.phil&&e.inside)e.ret=false}
+    else{e.wait=(e.inside?rnd(70,130):rnd(50,90))*nk()*lv().emp;if(e.phil){if(e.inside){e.ret=false;e.trips--;e.wait=e.trips>0?rnd(60,75):1e9}else e.wait=rnd(35,55)}}}}
+  if(e.st=='open'||e.st=='dwell'||e.st=='close'){if(asl()&&!e.ret)caught(e)}})}
 document.getElementById('reload').onclick=()=>{crashEl.classList.remove('on');showMenu(0)};
 againB.onclick=()=>{if(endMode=='again'){endEl.classList.remove('on');showMenu(1);return}if(endMode=='next')night++;startNight()};
 document.getElementById('toMenu').onclick=()=>{endEl.classList.remove('on');showMenu(1)};
 document.addEventListener('click',e=>{if(e.target.tagName=='BUTTON')e.target.blur()});
 document.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.blur()));
 addEventListener('keyup',e=>{if(e.code=='Space')e.preventDefault()});
-const inR=(x,y,r)=>x>=r[0]&&x<=r[0]+r[2]&&y>=r[1]&&y<=r[1]+r[3],pcOK=()=>!over&&!(eth&&eth.st=='here')&&!jbusy()&&sleepSt!=1&&sleepSt!=2;
+const inR=(x,y,r)=>x>=r[0]&&x<=r[0]+r[2]&&y>=r[1]&&y<=r[1]+r[3],pcOK=()=>!over&&!(eth&&eth.st=='here')&&!jbusy()&&sleepSt!=1&&sleepSt!=2&&sleepSt!=3;
 const hit=e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
   if(hb){if(inR(x,y,[HBX,HBY,HBW,HBH])){if(inR(x,y,PRV)&&hbP>0)return'hbp';if(inR(x,y,NXT)&&hbP<HB.length-1)return'hbn';return null}return'hbx'}
   if(dir==0&&!over&&sleepSt==0&&inR(x,y,HBR))return'hb';
@@ -823,7 +832,7 @@ const hit=e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y
     else{for(let i=0;i<tasks.length;i++)if(inR(x,y,tbR(i)))return't'+i;if(callSt==1&&inR(x,y,ansR))return'ans'}}
   if(dir==0&&Math.hypot(x-915,y-500)<40)return'gate';
   if((dir==1||dir==3)&&x>364&&x<612&&y>90&&y<400)return'door';return null};
-function canvasClick(e){if(over||menu||sleepSt==1||tcOpen)return;if(hb){const q=hit(e);if(q=='hbx')hb=false;else if(q=='hbp')hbP--;else if(q=='hbn')hbP++;return}const h=hit(e),pcH=h&&(h=='dot'||h=='ans'||h[0]=='t'||h[0]=='c');if(moving()&&!pcH)return;
+function canvasClick(e){if(over||menu||sleepSt==1||sleepSt==3||tcOpen)return;if(hb){const q=hit(e);if(q=='hbx')hb=false;else if(q=='hbp')hbP--;else if(q=='hbn')hbP++;return}const h=hit(e),pcH=h&&(h=='dot'||h=='ans'||h[0]=='t'||h[0]=='c');if(moving()&&!pcH)return;
   if(h=='hb'){openHB();return}
   if(h=='tc'){openTC();return}
   if(h=='zb'){scareMonster();return}
